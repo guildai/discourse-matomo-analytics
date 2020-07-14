@@ -1,44 +1,55 @@
 <script type="text/discourse-plugin" version="0.2">
-  api.onPageChange((url, title) => {
-    const currentUser = api.getCurrentUser();
+    api.onAppEvent("page:changed", function(data) {
+        const url = data.url;
+        const title = data.title;
 
-    if (settings.exclude_groups.trim() && currentUser) {
-      const excludedGroups = settings.exclude_groups.split(",").map(g => g.trim());
-      const currentUserGroups = currentUser.groups.map(g => g.name);
-      if (excludedGroups.filter(g => currentUserGroups.includes(g)).length) {
-        return;
-      }
-    }
+        // Work around strange dispatch to this event where url is not
+        // equal to window.location.path. A second dispatch follows with
+        // the correct url. This can only be a bug upstream. Workaround by
+        // checking for this state and returning rearly.
+        if (url != window.location.pathname) {
+            return;
+        }
 
-    window._paq = window._paq || [];
-    window._paq_loaded = window._paq_loaded || false;
+        const currentUser = api.getCurrentUser();
+    
+        // Return early if user is member of exclude groups.
+        if (settings.exclude_groups.trim() && currentUser) {
+            const excludedGroups = settings.exclude_groups.split(",").map(g => g.trim());
+            const currentUserGroups = currentUser.groups.map(g => g.name);
+            if (excludedGroups.filter(g => currentUserGroups.includes(g)).length) {
+                return;
+            }
+        }
 
-    if (!_paq_loaded) {
-      _paq.push(['setTrackerUrl', `//${settings.account}.matomo.cloud/matomo.php`]);
-      _paq.push(['setSiteId', settings.site_id]);
-      var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-      g.type='text/javascript';
-      g.async=true;
-      g.defer=true;
-      g.src=`//cdn.matomo.cloud/${settings.account}.matomo.cloud/matomo.js`;
-      s.parentNode.insertBefore(g,s);
-      _paq_loaded = true;
-    }
+        // Init Matomo script element.
+        window._paq = window._paq || [];
+        window._paq_loaded = window._paq_loaded || false;
+        if (!_paq_loaded) {
+            _paq.push(['setTrackerUrl', `//${settings.account}.matomo.cloud/matomo.php`]);
+            _paq.push(['setSiteId', settings.site_id]);
+            const script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.async = true;
+            script.defer = true;
+            script.src = `//cdn.matomo.cloud/${settings.account}.matomo.cloud/matomo.js`;
+            document.head.append(script);
+            _paq_loaded = true;
+        }
 
-    const userIdField = settings.user_id_tracking.trim();
-    if (userIdField && currentUser && currentUser[userIdField]) {
-      _paq.push(['setUserId', currentUser[userIdField]]);
-    }
-
-    if (settings.subdomain_tracking) {
-      const allDomains = "*" + document.domain.substring(document.domain.indexOf("."));
-      _paq.push(["setCookieDomain", allDomains]);
-      _paq.push(["setDomains", allDomains]);
-    }
-
-    _paq.push(["setCustomUrl", url]);
-    _paq.push(["setDocumentTitle", title]);
-    _paq.push(["trackPageView"]);
-    _paq.push(['enableLinkTracking']);
-  });
+        // Init _paq with tracking data.
+        const userIdField = settings.user_id_tracking.trim();
+        if (userIdField && currentUser && currentUser[userIdField]) {
+            _paq.push(['setUserId', currentUser[userIdField]]);
+        }
+        if (settings.subdomain_tracking) {
+            const allDomains = "*" + document.domain.substring(document.domain.indexOf("."));
+            _paq.push(["setCookieDomain", allDomains]);
+            _paq.push(["setDomains", allDomains]);
+        }
+        _paq.push(["setCustomUrl", url]);
+        _paq.push(["setDocumentTitle", title]);
+        _paq.push(["trackPageView"]);
+        _paq.push(['enableLinkTracking']);
+    });
 </script>
