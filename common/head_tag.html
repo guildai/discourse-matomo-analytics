@@ -14,11 +14,14 @@
     window._paq_loaded = window._paq_loaded || false;
 
     if (!_paq_loaded) {
-      var u = `//${settings.host_url}/`;
-      _paq.push(['setTrackerUrl', u+'piwik.php']);
-      _paq.push(['setSiteId', settings.website_id]);
+      _paq.push(['setTrackerUrl', `//${settings.account}.matomo.cloud/matomo.php`]);
+      _paq.push(['setSiteId', settings.site_id]);
       var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-      g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+      g.type='text/javascript';
+      g.async=true;
+      g.defer=true;
+      g.src=`//cdn.matomo.cloud/${settings.account}.matomo.cloud/matomo.js`;
+      s.parentNode.insertBefore(g,s);
       _paq_loaded = true;
     }
 
