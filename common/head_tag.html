@@ -1,12 +1,14 @@
 <script type="text/discourse-plugin" version="0.2">
-    api.onAppEvent("page:changed", function(data) {
-        const url = data.url;
-        const title = data.title;
-
+    api.onAppEvent("search-autocomplete:after-complete", (data) => {
+        // TODO - want to handle search terms - this isn't called.
+        console.log(data);    
+    });
+    
+    api.onPageChange((url, title) => {
         // Work around strange dispatch to this event where url is not
         // equal to window.location.path. A second dispatch follows with
         // the correct url. This can only be a bug upstream. Workaround by
-        // checking for this state and returning rearly.
+        // checking for this state and returning early.
         if (url != window.location.pathname) {
             return;
         }
